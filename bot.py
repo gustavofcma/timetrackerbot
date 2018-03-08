@@ -58,20 +58,23 @@ def set_timer(bot, update, args, job_queue, chat_data):
 def entrada(bot, update, args, job_queue, chat_data):
     """Add a job to the queue."""
     chat_id = update.message.chat_id
+    user = update.message.from_user
+    fn = user.first_name
+    ln = user.last_name
     msg_hr = ''
     try:
         # args[0] should contain the time for the timer in seconds
         hora_chegada = int(args[0])
-        msg_hr = 'agora'
+        msg_hr = 'numa hora específica'
 
         # Add job to queue
         #job = job_queue.run_once(alarm, hora_chegada, context=chat_id)
         #chat_data['job'] = job
 
     except (IndexError, ValueError):
-        msg_hr = 'numa hora específica'
+        msg_hr = 'agora'
 
-    update.message.reply_text('Bom dia, anotei que você chegou {}'.format(msg_hr))
+    update.message.reply_text('Bom dia, anotei que você chegou {}, {} {}'.format(msg_hr,fn,ln))
 
 
 def unset(bot, update, chat_data):

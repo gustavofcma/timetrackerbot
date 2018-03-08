@@ -1,63 +1,106 @@
-import sys
-import asyncio
-import telepot
-from telepot.aio.loop import MessageLoop
-from telepot.aio.delegate import per_chat_id, create_open, pave_event_space
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-"""
-$ python3.6 alarma.py <token>
-Send a number which indicates the delay in seconds. The bot will send you an
-alarm message after such a delay. It illustrates how to use the built-in
-scheduler to schedule custom events for later.
-To design a custom event, you first have to invent a *flavor*. To prevent flavors
-from colliding with those of Telegram messages, events are given flavors prefixed
-with `_` by convention. Then, follow these steps, which are further detailed by
-comments in the code:
-1. Customize routing table so the correct function gets called on seeing the event
-2. Define event-handling function
-3. Provide the event spec when scheduling events
+
+"""Simple Bot to send timed Telegram messages.
+# This program is dedicated to the public domain under the CC0 license.
+This Bot uses the Updater class to handle the bot and the JobQueue to send
+timed messages.
+First, a few handler functions are defined. Then, those functions are passed to
+the Dispatcher and registered at their respective places.
+Then, the bot is started and runs until we press Ctrl-C on the command line.
+Usage:
+Basic Alarm Bot example, sends a message after a set time.
+Press Ctrl-C on the command line or send a signal to the process to stop the
+bot.
 """
 
-class AlarmSetter(telepot.aio.helper.ChatHandler):
-    def __init__(self, *args, **kwargs):
-        super(AlarmSetter, self).__init__(*args, **kwargs)
+from telegram.ext import Updater, CommandHandler
+import logging
 
-        # 1. Customize the routing table:
-        #      On seeing an event of flavor `_alarm`, call `self.on__alarm`.
-        # To prevent flavors from colliding with those of Telegram messages,
-        # events are given flavors prefixed with `_` by convention. Also by
-        # convention is that the event-handling function is named `on_`
-        # followed by flavor, leading to the double underscore.
-        self.router.routing_table['_alarm'] = self.on__alarm
+# Enable logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
 
-    # 2. Define event-handling function
-    async def on__alarm(self, event):
-        print(event)  # see what the event object actually looks like
-        await self.sender.sendMessage('Beep beep, time to wake up!')
-
-    async def on_chat_message(self, msg):
-        try:
-            delay = float(msg['text'])
-
-            # 3. Schedule event
-            #      The second argument is the event spec: a 2-tuple of (flavor, dict).
-            # Put any custom data in the dict. Retrieve them in the event-handling function.
-            self.scheduler.event_later(delay, ('_alarm', {'payload': delay}))
-            await self.sender.sendMessage('Got it. Alarm is set at %.1f seconds from now.' % delay)
-        except ValueError:
-            await self.sender.sendMessage('Not a number. No alarm set.')
+logger = logging.getLogger(__name__)
 
 
-#TOKEN = sys.argv[1]
-TOKEN = '305619159:AAF_1WxYuz5Ra-GIjvS3AGtasjpYRaIhryY'
+# Define a few command handlers. These usually take the two arguments bot and
+# update. Error handlers also receive the raised TelegramError object in error.
+def start(bot, update):
+    update.message.reply_text('Hi! Use /set <seconds> to set a timer')
 
-bot = telepot.aio.DelegatorBot(TOKEN, [
-    pave_event_space()(
-        per_chat_id(), create_open, AlarmSetter, timeout=10),
-])
 
-loop = asyncio.get_event_loop()
-loop.create_task(MessageLoop(bot).run_forever())
-print('Listening ...')
+def alarm(bot, job):
+    """Send the alarm message."""
+    bot.send_message(job.context, text='Beep!')
 
-loop.run_forever()
+
+def set_timer(bot, update, args, job_queue, chat_data):
+    """Add a job to the queue."""
+    chat_id = update.message.chat_id
+    try:
+        # args[0] should contain the time for the timer in seconds
+        due = int(args[0])
+        if due < 0:
+            update.message.reply_text('Sorry we can not go back to future!')
+            return
+
+        # Add job to queue
+        job = job_queue.run_once(alarm, due, context=chat_id)
+        chat_data['job'] = job
+
+        update.message.reply_text('Timer successfully set!')
+
+    except (IndexError, ValueError):
+        update.message.reply_text('Usage: /set <seconds>')
+
+
+def unset(bot, update, chat_data):
+    """Remove the job if the user changed their mind."""
+    if 'job' not in chat_data:
+        update.message.reply_text('You have no active timer')
+        return
+
+    job = chat_data['job']
+    job.schedule_removal()
+    del chat_data['job']
+
+    update.message.reply_text('Timer successfully unset!')
+
+
+def error(bot, update, error):
+    """Log Errors caused by Updates."""
+    logger.warning('Update "%s" caused error "%s"', update, error)
+
+
+def main():
+    """Run bot."""
+    updater = Updater("305619159:AAF_1WxYuz5Ra-GIjvS3AGtasjpYRaIhryY")
+
+    # Get the dispatcher to register handlers
+    dp = updater.dispatcher
+
+    # on different commands - answer in Telegram
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("help", start))
+    dp.add_handler(CommandHandler("set", set_timer,
+                                  pass_args=True,
+                                  pass_job_queue=True,
+                                  pass_chat_data=True))
+    dp.add_handler(CommandHandler("unset", unset, pass_chat_data=True))
+
+    # log all errors
+    dp.add_error_handler(error)
+
+    # Start the Bot
+    updater.start_polling()
+
+    # Block until you press Ctrl-C or the process receives SIGINT, SIGTERM or
+    # SIGABRT. This should be used most of the time, since start_polling() is
+    # non-blocking and will stop the bot gracefully.
+    updater.idle()
+
+
+if __name__ == '__main__':
+    main()

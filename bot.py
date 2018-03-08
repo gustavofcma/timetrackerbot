@@ -59,22 +59,22 @@ def entrada(bot, update, args, job_queue, chat_data):
     """Add a job to the queue."""
     chat_id = update.message.chat_id
     msg_hr = ''
-    try:
-        # args[0] should contain the time for the timer in seconds
-        hora_chegada = int(args[0])
-        if hora_chegada < 0:
-            msg_hr = 'agora'
-        else:
-            msg_hr = 'numa hora específica'
+#try:
+    # args[0] should contain the time for the timer in seconds
+    hora_chegada = int(args[0])
+    if hora_chegada < 0:
+        msg_hr = 'agora'
+    else:
+        msg_hr = 'numa hora específica'
 
         # Add job to queue
         #job = job_queue.run_once(alarm, hora_chegada, context=chat_id)
         #chat_data['job'] = job
 
-        update.message.reply_text('Bom dia, anotei que você chegou {}'.format(msg_hr))
+    update.message.reply_text('Bom dia, anotei que você chegou {}'.format(msg_hr))
 
-    except (IndexError, ValueError):
-        update.message.reply_text('Deu beyblade')
+#except (IndexError, ValueError):
+ #   update.message.reply_text('Deu beyblade')
 
 
 def unset(bot, update, chat_data):

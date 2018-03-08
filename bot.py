@@ -73,8 +73,8 @@ def entrada(bot, update, args, job_queue, chat_data):
 
         update.message.reply_text('Bom dia, anotei que você chegou {}'.format(msg_hr))
 
-    except (IndexError, ValueError):
-        update.message.reply_text('Usage: /set <seconds>')
+    #except (IndexError, ValueError):
+    #    update.message.reply_text('Usage: /set <seconds>')
 
 
 def unset(bot, update, chat_data):

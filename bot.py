@@ -79,7 +79,7 @@ def entrada(bot, update, args, job_queue, chat_data):
 
     update.message.reply_text('Bom dia, anotei que você chegou {}, {} {}'.format(msg_hr,fn,ln))
     update.message.reply_text('{} - {}'.format(tst1,tst2))
-    update.message.reply_photo(pf.total_count)
+   # update.message.reply_photo(pf.total_count)
 
 
 def unset(bot, update, chat_data):

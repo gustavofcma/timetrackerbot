@@ -63,7 +63,7 @@ def entrada(bot, update, args, job_queue, chat_data):
     ln = user.last_name
     tst1 = user.username
     tst2 = user.name
-    pf = user.get_profile_photos
+    pf = user.get_profile_photos()
     msg_hr = ''
     try:
         # args[0] should contain the time for the timer in seconds

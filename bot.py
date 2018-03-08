@@ -109,7 +109,7 @@ def main():
                                   pass_args=True,
                                   pass_job_queue=True,
                                   pass_chat_data=True))
-    dp.add_handler(CommandHandler("entrada", set_timer,
+    dp.add_handler(CommandHandler("entrada", entrada,
                                   pass_args=True,
                                   pass_job_queue=True,
                                   pass_chat_data=True))

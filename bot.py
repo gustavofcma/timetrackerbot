@@ -63,7 +63,7 @@ def entrada(bot, update, args, job_queue, chat_data):
     ln = user.last_name
     tst1 = user.username
     tst2 = user.name
-    pf = user.get_profile_photos()
+    pf = user.get_profile_photos(user.id)
     msg_hr = ''
     try:
         # args[0] should contain the time for the timer in seconds
@@ -79,7 +79,7 @@ def entrada(bot, update, args, job_queue, chat_data):
 
     update.message.reply_text('Bom dia, anotei que você chegou {}, {} {}'.format(msg_hr,fn,ln))
     update.message.reply_text('{} - {}'.format(tst1,tst2))
-   # update.message.reply_photo(pf.total_count)
+    update.message.reply_photo(pf.total_count)
 
 
 def unset(bot, update, chat_data):
